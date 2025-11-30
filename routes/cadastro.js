@@ -2,14 +2,27 @@ const express = require("express");
 const cadastro = require("../db/db");
 const router = express.Router();
 
+router.get("/status", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    time: new Date().toISOString(),
+  });
+});
+
 router.post("/cadastro", (req, res) => {
   const cpflimpo = req.body.cpf.replace(/\./g, "").replace(/-/g, "");
   if (cpflimpo.length !== 11) {
     return res.status(400).send("CPF inválido!");
   }
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const email = req.body.email;
+  if (!regex.test(email)) {
+    return res.status(400).send(`email invalido.`);
+  }
   cadastro
     .create({
-      email: req.body.email,
+      email: email,
       senha: req.body.senha,
       cpf: cpflimpo,
     })
@@ -50,6 +63,36 @@ router.get("/:cpf", (req, res) => {
     })
     .catch((erro) => {
       res.send(`Erro ao listar o usuario, erro: ${erro}`);
+    });
+});
+
+router.delete("/delete/:cpf", (req, res) => {
+  cadastro
+    .destroy({ where: { cpf: req.params.cpf } })
+    .then(() => {
+      res.status(200).send("sucesso ao deletar usuario.");
+    })
+    .catch((erro) => {
+      res.status(500).send(`erro ao deletar usuario, erro: ${erro}`);
+    });
+});
+
+router.put("/update/:cpf", (req, res) => {
+  cadastro
+    .update(
+      {
+        email: req.body.email,
+        senha: req.body.senha,
+      },
+      {
+        where: { cpf: req.params.cpf },
+      }
+    )
+    .then(() => {
+      res.status(200).send(`usuario atualizado com sucesso.`);
+    })
+    .catch((erro) => {
+      return res.status(500).send(`erro ao atualizar o usuario, erro: ${erro}`);
     });
 });
 
