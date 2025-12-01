@@ -40,46 +40,57 @@ router.post("/cadastro", (req, res) => {
     });
 });
 
-router.get("/", (req, res) => {
-  cadastro
-    .findAll()
-    .then((usuarios) => {
-      res.json(usuarios);
-    })
-    .catch((erro) => {
-      res.send(`Erro ao listar usuarios, erro: ${erro}`);
-    });
+router.get("/", async (req, res) => {
+  try {
+    const usuarios = await cadastro.findAll();
+    res.status(200).json(usuarios);
+  } catch (erro) {
+    res.status(500).json({ erro: `erro ao listar usuarios, erro: ${erro}` });
+  }
 });
 
-router.get("/:cpf", (req, res) => {
-  cadastro
-    .findByPk(req.params.cpf)
-    .then((usuarios) => {
-      if (usuarios == null) {
-        return res.status(400).json(`Usuario não encontrado.`);
-      } else {
-        res.json(usuarios);
-      }
-    })
-    .catch((erro) => {
-      res.send(`Erro ao listar o usuario, erro: ${erro}`);
-    });
+router.get("/:cpf", async (req, res) => {
+  try {
+    const cpflimpo = req.params.cpf.trim();
+    if (cpflimpo.length !== 11) {
+      return res.status(400).send({ erro: `CPF inválido` });
+    }
+    return res.status(200).json(usuario);
+  } catch (erro) {
+    return res
+      .status(500)
+      .send({ erro: `erro ao listar usuario, erro: ${erro}` });
+  }
 });
 
-router.delete("/delete/:cpf", (req, res) => {
-  cadastro
-    .destroy({ where: { cpf: req.params.cpf } })
-    .then(() => {
-      res.status(200).send("sucesso ao deletar usuario.");
-    })
-    .catch((erro) => {
-      res.status(500).send(`erro ao deletar usuario, erro: ${erro}`);
-    });
+router.delete("/delete/:cpf", async (req, res) => {
+  try {
+    const cpflimpo = req.params.cpf.trim();
+    if (cpflimpo.length !== 11) {
+      return res.status(400).send({ erro: `CPF inválido` });
+    }
+    const usuario = await cadastro.findByPk(cpflimpo);
+    if (usuario === null) {
+      return res.status(404).json({ erro: `usuario não encontrado` });
+    }
+    await cadastro.destroy({ where: { cpf: cpflimpo } });
+    return res.status(200).json({ ok: `usuario deletado com sucesso` });
+  } catch (erro) {
+    res.status(500).json({ erro: `erro ao deletar usuario, erro: ${erro}` });
+  }
 });
 
-router.put("/update/:cpf", (req, res) => {
-  cadastro
-    .update(
+router.put("/update/:cpf", async (req, res) => {
+  try {
+    const cpflimpo = req.params.cpf.trim();
+    if (cpflimpo.length !== 11) {
+      return res.status(400).send({ erro: `CPF inválido` });
+    }
+    const usuario = await cadastro.findByPk(cpflimpo);
+    if (usuario === null) {
+      return res.status(404).json({ erro: `usuario não encontrado` });
+    }
+    await cadastro.update(
       {
         email: req.body.email,
         senha: req.body.senha,
@@ -87,13 +98,13 @@ router.put("/update/:cpf", (req, res) => {
       {
         where: { cpf: req.params.cpf },
       }
-    )
-    .then(() => {
-      res.status(200).send(`usuario atualizado com sucesso.`);
-    })
-    .catch((erro) => {
-      return res.status(500).send(`erro ao atualizar o usuario, erro: ${erro}`);
-    });
+    );
+    return res.status(200).json({ ok: `usuario atualizado com sucesso` });
+  } catch (erro) {
+    return res
+      .status(500)
+      .json({ erro: `erro ao atualizar usuario, erro: ${erro}` });
+  }
 });
 
 module.exports = router;
