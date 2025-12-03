@@ -1,6 +1,8 @@
 const express = require("express");
 const cadastro = require("../db/db");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
+const { hash } = require("bcryptjs");
 
 function limpacpf(cpf) {
   return cpf.replace(/\D/g, "");
@@ -25,9 +27,11 @@ router.post("/cadastro", async (req, res) => {
     if (!regex.test(email)) {
       return res.status(400).json({ erro: `email invalido.` });
     }
+    const senha = req.body.senha;
+    const senhaHash = await bcrypt.hash(senha, 10);
     await cadastro.create({
       email: email,
-      senha: req.body.senha,
+      senha: senhaHash,
       cpf: cpflimpo,
     });
     return res.status(200).json({ ok: "cadastrado com sucesso" });
