@@ -11,3 +11,6 @@ app.listen(PORT, () => {
 
 const router = require("./routes/cadastro");
 app.use("/user", router);
+
+const routeLogin = require("./routes/login");
+app.use("/log", routeLogin);

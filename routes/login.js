@@ -6,10 +6,10 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
-router.post("/", async (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, senha } = req.body;
   if (!email || !senha) {
-    return res.status(400).json({ erro: `envie o email e a senha` });
+    return res.status(400).json({ erro: `insira o email e a senha` });
   }
   const user = await cadastro.findOne({ where: { email } });
   if (!user) {
@@ -17,9 +17,9 @@ router.post("/", async (req, res) => {
   }
   const ok = await bcrypt.compare(senha, user.senha);
   if (!ok) {
-    return res.status(401).json({ erro: `senha incorreta` });
+    return res.status(401).json({ erro: "senha incorreta" });
   }
-  const token = jwt.sign(
+  const token = await jwt.sign(
     {
       cpf: user.cpf,
       email: user.email,
@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
     }
   );
   return res.status(200).json({
-    mensagem: "Login realizado com sucesso",
+    ok: "login realizado com sucesso",
     token: token,
   });
 });
