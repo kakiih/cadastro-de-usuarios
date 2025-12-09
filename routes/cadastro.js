@@ -3,6 +3,7 @@ const cadastro = require("../db/db");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const { hash } = require("bcryptjs");
+const auth = require("../middleware/auth");
 
 function limpacpf(cpf) {
   return cpf.replace(/\D/g, "");
@@ -28,6 +29,11 @@ router.post("/cadastro", async (req, res) => {
       return res.status(400).json({ erro: `email invalido.` });
     }
     const senha = req.body.senha;
+    if (!senha) {
+      return res
+        .status(401)
+        .json({ erro: "é necessário enviar a senha para cadastrar" });
+    }
     const senhaHash = await bcrypt.hash(senha, 10);
     await cadastro.create({
       email: email,
@@ -46,7 +52,7 @@ router.post("/cadastro", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const usuarios = await cadastro.findAll();
     res.status(200).json(usuarios);
@@ -105,10 +111,17 @@ router.put("/update/:cpf", async (req, res) => {
     if (!regex.test(email)) {
       return res.status(400).json({ erro: `email invalido.` });
     }
+    const senha = req.body.senha;
+    if (!senha) {
+      return res
+        .status(401)
+        .json({ erro: "é necessário enviar a senha para atualizar" });
+    }
+    const senhaHash = await bcrypt.hash(senha, 10);
     await cadastro.update(
       {
         email: req.body.email,
-        senha: req.body.senha,
+        senha: senhaHash,
       },
       {
         where: { cpf: cpflimpo },

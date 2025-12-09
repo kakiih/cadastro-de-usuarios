@@ -9,11 +9,11 @@ dotenv.config();
 router.post("/login", async (req, res) => {
   const { email, senha } = req.body;
   if (!email || !senha) {
-    return res.status(400).json({ erro: `insira o email e a senha` });
+    return res.status(400).json({ erro: "insira o email e a senha" });
   }
   const user = await cadastro.findOne({ where: { email } });
   if (!user) {
-    return res.status(404).json({ erro: `usuario não encontrado` });
+    return res.status(404).json({ erro: "usuario não encontrado" });
   }
   const ok = await bcrypt.compare(senha, user.senha);
   if (!ok) {
@@ -29,7 +29,7 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     }
   );
-  return res.status(200).json({
+  res.status(200).json({
     ok: "login realizado com sucesso",
     token: token,
   });
